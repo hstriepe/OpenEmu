@@ -9,7 +9,7 @@ OPENEMU_BUNDLE_ID_HELPER = org.openemu.OpenEmuHelperApp
 
 // Bundle versioning
 OPENEMU_MARKETING_VERSION = 2.5.0
-OPENEMU_BUILD_VERSION = 7413
+OPENEMU_BUILD_VERSION = 7414
 
 // Organization and company information
 OPENEMU_ORGANIZATION_IDENTIFIER = org.openemu
