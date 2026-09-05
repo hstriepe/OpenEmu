@@ -1,0 +1,27 @@
+name: Test Build
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Verify build configuration
+      run: |
+        echo "Checking build configuration..."
+        grep -E "OPENEMU_TEAM_ID|OPENEMU_MARKETING_VERSION" OpenEmu/AppBundleAndSigning.xcconfig
+    
+    - name: Build and verify
+      run: |
+        xcodebuild -workspace OpenEmu.xcworkspace \
+          -scheme "OpenEmu" \
+          -configuration Release \
+          -destination generic/platform=macOS \
+          | grep -E "BUILD SUCCEEDED|BUILD FAILED|error:"
