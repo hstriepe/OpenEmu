@@ -2,4 +2,5 @@
 // https://help.apple.com/xcode/#/dev745c5c974
 
 #include "CodeSignDefault.xcconfig"
+#include "AppBundleAndSigning.xcconfig"
 #include? "../CodeSign.xcconfig"
