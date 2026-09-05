@@ -20,9 +20,14 @@ RELEASE_DIR="${SCRIPT_DIR}/release"
 CORES_DIR="${RELEASE_DIR}/cores"
 FRAMEWORKS_DIR="${RELEASE_DIR}/Frameworks"
 
-# Build artifacts location
+# Build artifacts location - dynamically discover based on workspace
 DERIVED_DATA="${HOME}/Library/Developer/Xcode/DerivedData"
-BUILD_DIR="${DERIVED_DATA}/OpenEmu-eegmifgmujisblbtyrbawrwlgbeh/Build/Products/${CONFIGURATION}"
+if [ $EXPERIMENTAL -eq 1 ]; then
+    BUILD_DIR=$(find "$DERIVED_DATA" -name "OpenEmu-experimental-*" -type d 2>/dev/null | head -1)/Build/Products/${CONFIGURATION}
+else
+    BUILD_DIR=$(find "$DERIVED_DATA" -name "OpenEmu-eegmifgmujisblbtyrbawrwlgbeh" -type d 2>/dev/null | head -1)/Build/Products/${CONFIGURATION}
+    [ -z "$BUILD_DIR" ] && BUILD_DIR=$(find "$DERIVED_DATA" -name "OpenEmu-*" -type d 2>/dev/null | grep -v experimental | head -1)/Build/Products/${CONFIGURATION}
+fi
 
 # Configuration values from xcconfig
 TEAM_ID="${OPENEMU_TEAM_ID:-D6WY385Q4D}"
@@ -37,7 +42,7 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --notarize) ENABLE_NOTARIZE=1; shift ;;
         --skip-build) SKIP_BUILD=1; shift ;;
-        --experimental) EXPERIMENTAL=1; WORKSPACE="${SCRIPT_DIR}/OpenEmu-experimental.xcworkspace"; shift ;;
+        --experimental) EXPERIMENTAL=1; WORKSPACE="${SCRIPT_DIR}/OpenEmu-experimental.xcworkspace"; SCHEME="OpenEmu + Cores (Experimental, Alpha)"; shift ;;
         --help)
             grep "^#" "$0" | grep -v "^#!/bin/bash" | sed 's/^# //'
             exit 0
