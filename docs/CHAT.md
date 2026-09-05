@@ -124,3 +124,163 @@ Developers can now reference these variables in Xcode build settings or create l
 
 **Conclusion:** Configuration files successfully centralized. Build system working correctly with new xcconfig structure.
 
+### Push to Fork - hstriepe/OpenEmu (2026-09-05)
+
+**Commit Created:**
+- Commit hash: 8bb7028ee
+- Message: "Add workspace configuration and agentic coding support"
+
+**Files Included in Commit:**
+- ✅ .vscode/vscode-notify-desktop-port.json
+- ✅ AGENTS.md (multi-agent AI development support)
+- ✅ CLAUDE.md (project contributor guidelines)
+- ✅ docs/CHAT.md (development session history)
+- ✅ docs/PROMPT.md (task prompts)
+- ✅ OpenEmu-metal.xcworkspace/xcshareddata/swiftpm/Package.resolved
+- ✅ OpenEmu/Config.xcconfig (updated to reference AppBundleAndSigning)
+
+**Files NOT Included (intentionally):**
+- ❌ AppBundleAndSigning.xcconfig (production configuration, kept local)
+- ❌ CodeSign.xcconfig (user-specific overrides, in .gitignore)
+- ❌ release/ directory (build artifacts)
+- ❌ build.sh (local build script)
+
+**Push Status:** Ready to push
+- Remote: hstriepe (https://github.com/hstriepe/OpenEmu.git)
+- Branch: master
+- Awaiting authentication credentials
+
+**Push Completed:** ✅
+- Remote: git@github.com:hstriepe/OpenEmu.git (SSH)
+- Branch: master
+- Commit: 8bb7028ee
+- Status: Successfully pushed to fork
+
+All configuration files and agentic coding support documentation are now available in the fork.
+
+### Framework Code Signature Issue - RESOLVED (2026-09-05)
+
+**Problem:**
+- App copied to /Applications failed to launch
+- Error: "different Team IDs" between main app and embedded frameworks
+- Framework OpenEmuShaders.framework had TeamIdentifier=not set
+
+**Root Cause:**
+- Default build configuration (CodeSignDefault.xcconfig) had CODE_SIGN_IDENTITY set to "-" (no signing)
+- DEVELOPMENT_TEAM was empty
+- This resulted in automatic signing without team ID assignment
+
+**Solution:**
+1. Updated OpenEmu/CodeSignDefault.xcconfig:
+   - Changed CODE_SIGN_IDENTITY from "-" to "Apple Development"
+   - Set DEVELOPMENT_TEAM = D6WY385Q4D
+   - Kept CODE_SIGN_STYLE = Automatic
+2. Rebuilt full workspace with corrected configuration
+3. Copied updated app to /Applications
+
+**Result:** ✅ SUCCESS
+- Main app TeamIdentifier: D6WY385Q4D
+- All frameworks TeamIdentifier: D6WY385Q4D
+- App launches successfully from /Applications
+- All frameworks load without code signature errors
+
+**Configuration Impact:**
+The fix ensures that all builds now properly embed the team ID in code signatures,
+preventing Team ID mismatches when frameworks are loaded. This configuration is now
+defined in the centralized xcconfig files for consistency across all targets.
+
+### Local Release Build Script Creation (2026-09-05)
+
+**Files Created:**
+1. **release-build.sh** - Automated build and release organization script
+2. **RELEASE-BUILD.md** - Comprehensive documentation and usage guide
+
+**Script Features:**
+- Automated Release configuration build
+- Code signing with Developer ID certificate
+- Notarization support (optional, via ~/bin/ntmy)
+- Release artifact organization:
+  - `./release/OpenEmu.app`
+  - `./release/cores/` (31 plugin cores)
+  - `./release/Frameworks/` (5 frameworks)
+- Comprehensive logging and error handling
+- Support for environment variable configuration
+- CodeSign.xcconfig for local overrides
+
+**Configuration Support:**
+- Reads OPENEMU_TEAM_ID from environment or xcconfig
+- Reads OPENEMU_CODE_SIGN_IDENTITY from environment or xcconfig
+- Supports local CodeSign.xcconfig for user-specific settings (in .gitignore)
+
+**Usage Examples:**
+```bash
+# Basic release build
+./release-build.sh
+
+# Build with notarization
+./release-build.sh --notarize
+
+# Use existing build (skip compilation)
+./release-build.sh --skip-build
+
+# Show help
+./release-build.sh --help
+```
+
+**Test Results:**
+- ✅ Script successfully organized release artifacts
+- ✅ OpenEmu.app: 142 MB
+- ✅ Plugin cores: 31 systems organized in cores/ directory
+- ✅ Frameworks: 5 frameworks organized in Frameworks/ directory
+- ✅ Team ID properly embedded in all signatures
+
+**Integration with Notarization:**
+- Script supports ~/bin/ntmy for Apple notarization
+- Automatically submits and staples notarization tickets
+- Integrates with xcconfig team ID configuration
+
+The release script provides a complete workflow for creating production-ready
+OpenEmu releases with proper code signing and optional notarization.
+
+### OpenEmu-Experimental Workspace & Release Build (2026-09-05)
+
+**Version Update:** 2.5.0, Build #7413
+
+**Experimental Workspace Created:**
+- Duplicated OpenEmu-metal.xcworkspace → OpenEmu-experimental.xcworkspace
+- Includes experimental cores and additional system support
+- Contains lightweight set of core emulators for focused testing
+
+**Release Build Script Enhancement:**
+- Added `--experimental` flag to release-build.sh
+- Automatically selects OpenEmu-experimental.xcworkspace when flag is used
+- Updated version display to show workspace type
+
+**Full Experimental Release Build Results:**
+- ✅ BUILD SUCCEEDED (exit code 0)
+- Release location: ./release/
+- Release size: 268 MB
+- OpenEmu.app: Built with version 2.5.0, build 7413
+- Team ID: D6WY385Q4D properly embedded
+- All signatures valid
+
+**Release Contents:**
+- OpenEmu.app (experimental version)
+- Experimental cores (subset for testing)
+- All frameworks properly signed and organized
+
+**Usage:**
+```bash
+# Standard release build
+./release-build.sh
+
+# Experimental release build
+./release-build.sh --experimental
+```
+
+**Next Steps:**
+- Add dolphin-core fork: git@github.com:hstriepe/dolphin-core.git
+- Update submodules with experimental cores
+- Address dolphin-core macOS compatibility issues (2024+)
+- Identify additional submodules requiring forks
+

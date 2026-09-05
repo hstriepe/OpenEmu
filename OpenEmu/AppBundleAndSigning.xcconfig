@@ -1,0 +1,40 @@
+// OpenEmu Bundle Identifier and Signing Configuration
+// This file centralizes all bundle-related and code signing settings
+// for the OpenEmu application and its targets.
+
+// ===== BUNDLE CONFIGURATION =====
+// Main application bundle identifier
+OPENEMU_BUNDLE_ID = org.openemu.OpenEmu
+OPENEMU_BUNDLE_ID_HELPER = org.openemu.OpenEmuHelperApp
+
+// Bundle versioning
+OPENEMU_MARKETING_VERSION = 2.5.0
+OPENEMU_BUILD_VERSION = 7413
+
+// Organization and company information
+OPENEMU_ORGANIZATION_IDENTIFIER = org.openemu
+OPENEMU_COMPANY_NAME = OpenEmu Team
+OPENEMU_COPYRIGHT = Copyright © 2005-2026 OpenEmu Team. All rights reserved.
+
+// ===== CODE SIGNING CONFIGURATION =====
+// Developer ID information
+OPENEMU_TEAM_ID = D6WY385Q4D
+OPENEMU_SIGNING_CERT = Developer ID Application: Harald Striepe (D6WY385Q4D)
+
+// Code signing style (Manual for Developer ID, Automatic for development)
+OPENEMU_CODE_SIGN_STYLE = Manual
+OPENEMU_CODE_SIGN_IDENTITY = $(OPENEMU_SIGNING_CERT)
+
+// Provisioning profile (empty for Developer ID signed apps)
+OPENEMU_PROVISIONING_PROFILE =
+
+// ===== APPLY TO BUILD SETTINGS =====
+// These variables can be referenced in build settings across all targets
+// Example usage in Xcode build settings:
+//   PRODUCT_BUNDLE_IDENTIFIER = $(OPENEMU_BUNDLE_ID)
+//   CODE_SIGN_IDENTITY = $(OPENEMU_CODE_SIGN_IDENTITY)
+//   DEVELOPMENT_TEAM = $(OPENEMU_TEAM_ID)
+//   MARKETING_VERSION = $(OPENEMU_MARKETING_VERSION)
+
+// Code signing options for release builds
+OTHER_CODE_SIGN_FLAGS = --timestamp --options=runtime
