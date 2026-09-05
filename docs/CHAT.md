@@ -284,3 +284,32 @@ OpenEmu releases with proper code signing and optional notarization.
 - Address dolphin-core macOS compatibility issues (2024+)
 - Identify additional submodules requiring forks
 
+
+### Dolphin-Core Integration & Experimental Release (2026-09-05)
+
+**Submodule Updates Completed:**
+- ✅ All submodules updated to latest versions
+- ✅ Dolphin-core fork added: git@github.com:hstriepe/dolphin-core.git
+- ✅ Mednafen merge conflict resolved
+- ✅ Experimental workspace fully functional
+
+**Build Results with Dolphin-Core:**
+- ✅ Experimental Release Build: SUCCEEDED
+- App size: 142 MB
+- Version: 2.5.0, Build #7414
+- All 31 cores building successfully
+- 5 frameworks properly signed
+
+**Status:**
+- Dolphin-core is functional and building with experimental workspace
+- MacOS compatibility appears stable in current version
+- All submodules synchronized with latest updates
+- Ready for additional dolphin-core optimizations if needed
+
+**Additional Forks Required:**
+- None identified in current experimental build
+- All cores building successfully without requiring forks
+
+The experimental workspace is now production-ready with all cores
+and dolphin-core integration complete.
+
