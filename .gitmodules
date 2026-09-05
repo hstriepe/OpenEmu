@@ -21,7 +21,7 @@
 	url = ../../OpenEmu/Mupen64Plus-Core.git
 [submodule "Nestopia"]
 	path = Nestopia
-	url = ../../OpenEmu/Nestopia-Core.git
+	url = git@github.com:hstriepe/Nestopia-Core.git
 [submodule "SNES9x"]
 	path = SNES9x
 	url = ../../OpenEmu/SNES9x-Core.git
@@ -84,10 +84,13 @@
 	url = ../../OpenEmu/JollyCV-Core.git
 [submodule "DeSmuME"]
 	path = DeSmuME
-	url = ../../OpenEmu/DeSmuME-Core.git
+	url = git@github.com:hstriepe/DeSmuME-Core.git
 [submodule "picodrive"]
 	path = picodrive
 	url = ../../OpenEmu/picodrive.git
 [submodule "dolphin-core"]
 	path = dolphin-core
 	url = git@github.com:hstriepe/dolphin-core.git
+[submodule "PPSSPP"]
+	path = PPSSPP
+	url = git@github.com:hstriepe/PPSSPP-Core.git
