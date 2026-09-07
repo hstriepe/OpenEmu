@@ -1,6 +1,14 @@
 OpenEmu
 =======
 
+### Fork of github [OpenEmu/OpenEmu](https://github.com/OpenEmu/OpenEmu)
+
+- Universal compiles and builds updates.
+
+
+
+# OpenEmu
+
 ![alt text](http://openemu.org/img/intro-md.png "OpenEmu Screenshot")
 
 OpenEmu is an open-source project whose purpose is to bring macOS game emulation into the realm of first-class citizenship. The project leverages modern macOS technologies, such as Cocoa, Metal, Core Animation, and other third-party libraries. One third-party library example is Sparkle, which is used for auto-updating. OpenEmu uses a modular architecture, allowing for game-engine plugins, allowing OpenEmu to support a host of different emulation engines and back ends while retaining the familiar macOS native front end.
@@ -42,6 +50,6 @@ Currently, OpenEmu can load the following game engines as plugins:
 Minimum Requirements
 --------------------
 
-macOS Mojave 10.14.4
+macOS Montery 12.0
 
-Building the default branch requires Xcode 14.3 and macOS Ventura.
+Building the default branch requires Xcode 27 and macOS Golden Gate. I have not tried Xcode 26 and Tahoe.
