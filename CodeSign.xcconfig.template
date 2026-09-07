@@ -1,0 +1,24 @@
+// Local Code Signing Configuration Template (USER-SPECIFIC)
+// This file is NOT checked into git and allows developers to override
+// code signing settings for their local environment.
+//
+// To use this file:
+// 1. Copy this file to CodeSign.xcconfig in the repo root
+// 2. Uncomment and modify the settings below for your development environment
+// 3. This file will be automatically included by Config.xcconfig
+
+// Example: Override team ID for your developer account
+// DEVELOPMENT_TEAM = ABC123XYZ9
+
+// Example: Override code signing identity
+// CODE_SIGN_IDENTITY = Apple Development: Your Name (XXXXXXXXXX)
+
+// Example: Override code sign style (Automatic for development, Manual for release)
+// CODE_SIGN_STYLE = Automatic
+
+// Example: Set provisioning profile for development builds
+// PROVISIONING_PROFILE_SPECIFIER = macOS Team Provisioning Profile: org.openemu.OpenEmu
+
+// Note: If you need to disable code signing for testing:
+// CODE_SIGN_IDENTITY = -
+// CODE_SIGN_STYLE = Automatic
