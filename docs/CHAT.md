@@ -71,3 +71,27 @@
 - OpenEmuKit: "Fix plugin crash on Swift 6: gracefully handle nil controllers"
 - OpenEmu: "Update AppDelegate to skip plugins without valid controllers"
 
+### Step 6: Final Release Export
+- Clean Release build completed successfully
+- Exported to ./release/:
+  * **OpenEmu.app** — Universal binary (arm64 + x86_64) with plugin crash fix
+  * **Frameworks/** — 7 compiled frameworks
+    - OpenEmuKit.framework
+    - OpenEmuShaders.framework
+    - OpenEmuSystem.framework
+    - OpenEmuBase.framework
+    - Sparkle.framework
+    - UniversalDetector.framework
+    - XADMaster.framework
+  * **Cores/** — 19 emulator core plugins
+    - Stella, ProSystem, Atari800, VecXGL, JollyCV, FCEU, BSNES
+    - CrabEmu, Gambatte, O2EM, PPSSPP, Picodrive, Nestopia
+    - Mednafen, Mupen64Plus, mGBA, GenesisPlus, Bliss, Reicast
+
+✅ **RELEASE COMPLETE AND VERIFIED**
+- macOS deployment target: 12.0 (Monterey minimum)
+- Code signing: hstriepe@mac.com (Team D6WY385Q4D)
+- All plugins load correctly from ~/Library/Application Support/OpenEmu/
+- Swift 6 compatibility: Plugin crash issue fixed
+- Ready for distribution
+
