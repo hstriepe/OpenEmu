@@ -366,16 +366,20 @@ class AppDelegate: NSObject {
     fileprivate func loadPlugins() {
         // Register all system controllers with the bindings controller.
         for plugin in OESystemPlugin.allPlugins {
-            OEBindingsController.register(plugin.controller)
+            if plugin.hasValidController {
+                OEBindingsController.register(plugin.controller)
+            }
         }
-        
+
         let library = OELibraryDatabase.default!
-        
+
         let context = library.mainThreadContext
         for plugin in OESystemPlugin.allPlugins {
-            _ = OEDBSystem.system(for: plugin, in: context)
+            if plugin.hasValidController {
+                _ = OEDBSystem.system(for: plugin, in: context)
+            }
         }
-        
+
         library.disableSystemsWithoutPlugin()
         try? library.mainThreadContext.save()
     }
