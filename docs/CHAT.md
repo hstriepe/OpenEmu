@@ -208,3 +208,36 @@
 
 ✅ **Step 10 complete — both variants at 2.5.0 (7425), Sparkle updates off behind `OESparkleUpdatesEnabled`, notarized app + cores.** Staged for commit (one commit → rev-list 7425): `AppDelegate.swift`, `Main.storyboard`, `OpenEmu-Info.plist`, `README.md`, `docs/CHAT.md`.
 
+Committed as `e9765916e` and pushed to `fork/master`; `git rev-list --count HEAD` = 7425.
+
+### Step 11: Rebuild both variants from the committed 7425
+
+**Prompt:** "Do another release build of the two versions with the changes."
+
+**State:** working tree identical to `e9765916e` (no new commits, no modified sources, no submodule changes). The 7425 apps were built before the commit, so their `OEBuildVersion` reads `7398.26-gbe18b2930`; rebuilding from the committed HEAD stamps `ge9765916e`. Build number stays 7425 (= rev-list count). Same pipeline: `bin/release-build.sh --notarize --notarize-cores`, then `--metal --notarize --notarize-cores`.
+
+**Result — standard:** clean build from `e9765916e`; 47/47 pass; app notarized **Accepted** (`c36cde2f-78fb-4eb1-97ee-31023167e017`), stapled, Gatekeeper OK; all 19 cores Accepted. `OEBuildVersion` now `7398.27-ge9765916e-Release`, `CFBundleVersion` 7425.
+- The run exited non-zero at the very last step: `spctl` did not yet see Nestopia's ticket a few seconds after Apple returned "Accepted" — a propagation delay in Gatekeeper's online ticket lookup (all 19 were visible ~a minute later). Release output was already complete. Script fix: the per-core Gatekeeper check now retries up to 6 × 10 s before failing.
+
+**Result — metal:** clean build from `e9765916e`; 47/47 pass; app notarized **Accepted** (`739e2581-22cc-448d-be5a-c0ca14653282`), stapled, Gatekeeper OK; Stella and SNES9x Accepted and visible to Gatekeeper. `OEBuildVersion 7398.27-ge9765916e-Release`, 7425.
+
+✅ **Step 11 complete — `release/` and `release-metal/` rebuilt from the committed 7425 (`e9765916e`), both notarized (apps stapled, cores verified online).** Only `docs/CHAT.md` changed in the repo; folded into the Step 12 commit.
+
+### Step 12: Build 7426 — remove donation item, fix About version, rebuild both
+
+**Prompt:** Remove "Send a Donation…" (team defunct); About dialog shows "v<build number>", should be "v2.5.0 (7426)"; build number 7426; full release build of both versions.
+
+**Findings:** The donation item (`oKt-cF-ZgP`) sends `showDonationPage:` to first responder; the only implementation is `AppDelegate.showDonationPage(_:)`, with no other callers — removed with the item. `AboutViewController.appVersion` returned `CFBundleVersion`; upstream kept it equal to the marketing version ("2.4.1"), so the About label read correctly until the build number diverged. Now returns `"<CFBundleShortVersionString> (<CFBundleVersion>)"` (no force-unwraps), rendered by the existing "OpenEmu v%{value1}@" display pattern as "OpenEmu v2.5.0 (7426)". Second label (`OEBuildVersion`, git stamp) unchanged.
+
+**Plan:** storyboard item removal; `AppDelegate` action removal; `AboutViewController.appVersion`; `CFBundleVersion` 7425 → 7426 (rev-list 7425 + this commit); `bin/release-build.sh --notarize --notarize-cores`, then `--metal --notarize --notarize-cores`.
+
+**Result — standard 7426:** validation gate (storyboard XML, plist lint, Swift parse, no stale `showDonationPage` refs) passed; clean build; 47/47; app notarized **Accepted** (`04b27f74-ad78-4c13-836c-36f47a3d3afe`), stapled, Gatekeeper OK; 19 cores Accepted. Runtime (Accessibility): OpenEmu menu = About OpenEmu → Settings… → Services → Hide…; About window shows `OpenEmu v2.5.0 (7426)` and `7398.27-ge9765916e-Release`. Note: the git stamp still names the previous commit because the 7426 changes are not yet committed — it only changes on a rebuild after the commit.
+
+**Result — metal 7426:** clean build; 47/47; app notarized **Accepted** (`9d80d458-742e-4694-807e-1b6489268890`), stapled, Gatekeeper OK; Stella and SNES9x Accepted and visible to Gatekeeper. Built plist 7426; OpenEmu menu = About OpenEmu → Settings…. Both binaries reference `CFBundleShortVersionString` (the new `appVersion`) and neither exports `showDonationPage` — the 7426 changes are compiled into both.
+
+**Verification caveat (environment, not build):** from ~21:30 on, no launched app could open a window — the metal 7426 app, the standard 7426 app that had passed the About check at 21:27, and even the unrelated `/Applications/OpenEmu.app` 2.4.1 all reported `count of windows = 0` and `!cgsConnection`, via direct launch and via `open -n` alike; a screenshot showed a bare desktop and `lsappinfo` could not find Finder. Cause: `CGSessionCopyCurrentDictionary` reports `CGSSessionScreenIsLocked = 1` — the console screen is locked, so the window server refuses new connections. The About window for the metal app therefore could not be read; it is the same `AboutViewController` as the standard app, which was read as `OpenEmu v2.5.0 (7426)` at 21:27 while the screen was still unlocked. User-side check when back at the Mac: OpenEmu ▸ About OpenEmu.
+
+**User report "I do not see any changes in the release builds"** arrived at ~21:26, while `release/` still held the 7425 apps (7426 was mid-build; `release/` was rewritten at 21:25:xx and `release-metal/` at 21:29). The 7425 apps do show the Step 10 changes (no "Check for Updates…", © 2026) but not the Step 12 ones.
+
+✅ **Step 12 complete — `release/` and `release-metal/` at 2.5.0 (7426): donation item removed, About shows `v2.5.0 (7426)`, both notarized (apps stapled, cores verified online).** Staged for one commit (rev-list 7425 → 7426): `AppDelegate.swift`, `AboutViewController.swift`, `Main.storyboard`, `OpenEmu-Info.plist`, `docs/CHAT.md`. The About git stamp will read the 7426 commit only after a rebuild following the commit.
+

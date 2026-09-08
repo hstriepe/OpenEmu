@@ -178,15 +178,6 @@
                                                 <action selector="checkForUpdates:" target="805" id="1180"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Send a Donation…" id="oKt-cF-ZgP">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <userDefinedRuntimeAttributes>
-                                                <userDefinedRuntimeAttribute type="boolean" keyPath="localizeTitle" value="YES"/>
-                                            </userDefinedRuntimeAttributes>
-                                            <connections>
-                                                <action selector="showDonationPage:" target="-1" id="F5A-7O-Vfa"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="1023">
                                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                                         </menuItem>

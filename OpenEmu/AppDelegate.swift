@@ -518,13 +518,7 @@ class AppDelegate: NSObject {
     @IBAction func showPreferencesWindow(_ sender: AnyObject?) {
         preferencesWindowController.showWindow(nil)
     }
-    
-    // MARK: - Donation Link
-    
-    @IBAction func showDonationPage(_ sender: AnyObject?) {
-        NSWorkspace.shared.open(URL(string: "http://openemu.org/donate/")!)
-    }
-    
+
     // MARK: - KVO
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {

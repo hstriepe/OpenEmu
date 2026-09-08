@@ -52,7 +52,10 @@ final class AboutViewController: NSViewController {
     }
     
     @objc dynamic var appVersion: String {
-        return Bundle.main.infoDictionary!["CFBundleVersion"] as! String
+        let info = Bundle.main.infoDictionary
+        let shortVersion = info?["CFBundleShortVersionString"] as? String ?? ""
+        let buildNumber = info?["CFBundleVersion"] as? String ?? ""
+        return "\(shortVersion) (\(buildNumber))"
     }
     
     @objc dynamic var buildVersion: String {
