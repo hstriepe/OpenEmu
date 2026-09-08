@@ -699,6 +699,7 @@
 		EF2FDBED14CFFE1B002A64F2 /* ControlsKeySeparatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D9991E146F40DA004409DC /* ControlsKeySeparatorView.swift */; };
 		EFBD5D7814EFE19A00FBD1E0 /* NSColor+OEAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBD5D7714EFE19A00FBD1E0 /* NSColor+OEAdditions.swift */; };
 		EFBD5D7F14EFE26300FBD1E0 /* OEGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = EFBD5D7C14EFE26300FBD1E0 /* OEGridView.m */; };
+		F52624E7304FAF9700324094 /* OpenEmu.icon in Resources */ = {isa = PBXBuildFile; fileRef = F52624E6304FAF9700324094 /* OpenEmu.icon */; };
 		FE6310A1187F099800D8AE07 /* MSX.oesystemplugin in CopyFiles */ = {isa = PBXBuildFile; fileRef = FEB6625B187B791800D14713 /* MSX.oesystemplugin */; };
 		FEB66268187B792700D14713 /* OEMSXSystemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEB66251187B62CA00D14713 /* OEMSXSystemController.swift */; };
 		FEB66269187B792700D14713 /* OEMSXSystemResponder.m in Sources */ = {isa = PBXBuildFile; fileRef = FEB66254187B751700D14713 /* OEMSXSystemResponder.m */; };
@@ -2058,6 +2059,7 @@
 		F1A2C86D1AAD0B3A00A17C80 /* fr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F1A2C86E1AAD0B3B00A17C80 /* fr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F1A2C86F1AAD0B3B00A17C80 /* fr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/ControlLabels.strings; sourceTree = "<group>"; };
+		F52624E6304FAF9700324094 /* OpenEmu.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = OpenEmu.icon; sourceTree = "<group>"; };
 		FEB66251187B62CA00D14713 /* OEMSXSystemController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OEMSXSystemController.swift; sourceTree = "<group>"; };
 		FEB66253187B751700D14713 /* OEMSXSystemResponder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OEMSXSystemResponder.h; sourceTree = "<group>"; };
 		FEB66254187B751700D14713 /* OEMSXSystemResponder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OEMSXSystemResponder.m; sourceTree = "<group>"; };
@@ -2902,6 +2904,7 @@
 				05DB72A22532681B0098459D /* OpenEmuTests */,
 				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
 				19C28FB0FE9D524F11CA2CBB /* Products */,
+				F52624E6304FAF9700324094 /* OpenEmu.icon */,
 			);
 			indentWidth = 4;
 			name = OpenEmu;
@@ -5606,6 +5609,7 @@
 			files = (
 				05E4400B22991527009E6D27 /* Shaders in Resources */,
 				C6C3734316BE7BAF003E57AE /* OE Startup.qtz in Resources */,
+				F52624E7304FAF9700324094 /* OpenEmu.icon in Resources */,
 				8FBAE60C254BA0D300446C3B /* OEControls.strings in Resources */,
 				1B32151514DDD49E00C5B50A /* OpenEmu.dae in Resources */,
 				1B32151614DDD49E00C5B50A /* OpenEmuText.dae in Resources */,
@@ -7566,6 +7570,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_ENTITLEMENTS = OpenEmuHelperApp/OpenEmuHelperApp.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
@@ -7596,6 +7601,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_ENTITLEMENTS = OpenEmuHelperApp/OpenEmuHelperApp.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
@@ -8466,6 +8472,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = OpenEmu;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				CODE_SIGN_ENTITLEMENTS = OpenEmu.entitlements;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8503,6 +8510,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = OpenEmu;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				CODE_SIGN_ENTITLEMENTS = OpenEmu.entitlements;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

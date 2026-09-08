@@ -4,6 +4,10 @@ OpenEmu
 ### Fork of github [OpenEmu/OpenEmu](https://github.com/OpenEmu/OpenEmu)
 
 - Universal compiles and builds updates.
+- Release builds: `bin/release-build.sh` builds, signs with Developer ID + hardened
+  runtime, and organizes `release/` (`OpenEmu.app`, `cores/`, `Frameworks/`).
+  Add `--metal` for the Metal/Stella variant (`release-metal/`) and `--notarize`
+  to notarize and staple. Signing rationale: `docs/decisions/0001-developer-id-hardened-runtime.md`.
 
 
 

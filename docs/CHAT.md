@@ -130,3 +130,47 @@
 - Both include Swift 6 compatibility fixes
 - Ready for distribution
 
+### Step 9: Build 7423 — Developer ID signing + notarization (bin/release-build.sh)
+
+**Prompt:** Bump build to 7423, complete build of both variants, use `bin/release-build.sh` to codesign/notarize, check it for correctness.
+
+**Correction to Step 5:** The claimed root cause ("Swift 6 `Bundle.principalClass` returns nil for system plugins") was wrong. The standalone Swift test that "proved" it ran without `OpenEmuSystem.framework` loaded, so the plugin dylib could not link. Inside the app all 31 system plugins load (verified: 62 `.oesystemplugin` files mapped in the running release build). The `hasValidController` guard remains as a defensive fix; the actual trigger of the Sep 5 crash on `/Applications/OpenEmu.app` is unconfirmed.
+
+**Findings — why notarization failed on 2026-09-05** (`xcrun notarytool log d018462b-…`): every flagged binary was signed with *Apple Development*, had no secure timestamp, no hardened runtime, and carried `get-task-allow`. `OpenEmuHelperApp` and `OESaveStateQLPlugin` hard-code ad-hoc signing in the pbxproj, so `CodeSign.xcconfig` never reached them.
+
+**Findings — script defects in the original `release-build.sh`:**
+1. `SCRIPT_DIR` is `bin/`, so `WORKSPACE` and `RELEASE_DIR` resolved to `bin/OpenEmu.xcworkspace` / `bin/release` (nonexistent).
+2. `--experimental` pointed at `OpenEmu-experimental.xcworkspace` (does not exist); the real second workspace is `OpenEmu-metal.xcworkspace`, scheme `OpenEmu + Stella`.
+3. `BUILD_DIR` was computed *before* argument parsing, so `--experimental` could never change it; it also guessed a hard-coded DerivedData hash.
+4. `codesign --deep --options=runtime` re-sign after the build would strip the QuickLook extensions' sandbox entitlements and cannot add per-target entitlements.
+5. `organize_release` copied `*.oesystemplugin` as "cores" — those are system plugins already bundled inside `OpenEmu.app/Contents/PlugIns/Systems`; cores are `*.oecoreplugin` and live in `~/Library/Application Support/OpenEmu/Cores`.
+6. Frameworks were copied from `BUILD_DIR`, missing `UniversalDetector`/`XADMaster` which only exist embedded in the app.
+7. `set -e` without `pipefail`, so `codesign … | tail` masked failures.
+8. `ntmy --submit` returns `osascript`'s exit code, not `stapler`'s — a rejected notarization still exited 0.
+
+**Plan (approved by prompt):**
+- `OpenEmu-Info.plist`: CFBundleVersion 7420 → 7423.
+- Add `OpenEmu/OpenEmu.entitlements` (disable-library-validation) and `OpenEmu/OpenEmuHelperApp/OpenEmuHelperApp.entitlements` (disable-library-validation, allow-jit, allow-unsigned-executable-memory); wire via `CODE_SIGN_ENTITLEMENTS` on both targets, Debug+Release. Required because App Support cores are ad-hoc signed (`TeamIdentifier=not set`) and dynarec cores need JIT.
+- Rewrite `bin/release-build.sh`: repo-relative paths; `--metal` variant → `release-metal/`; `BUILT_PRODUCTS_DIR` from `-showBuildSettings`; signing via xcodebuild overrides (`CODE_SIGN_STYLE=Manual`, `CODE_SIGN_IDENTITY="Developer ID Application"`, `DEVELOPMENT_TEAM`, `ENABLE_HARDENED_RUNTIME=YES`, `OTHER_CODE_SIGN_FLAGS=--timestamp`, `CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO`); `verify_signing` gate before upload; `stapler validate` + `spctl` after; cores from App Support re-signed with the release identity; frameworks from the app bundle; `set -euo pipefail`.
+- ADR `docs/decisions/0001-developer-id-hardened-runtime.md`.
+- `.gitignore` `/release/`, `/release-metal/`; `git rm --cached` the 2,984 release binaries committed by mistake in "Release v2.5.0 (build 7420)".
+- Run standard build → runtime smoke test (system plugins load under hardened runtime) → notarize → repeat for `--metal`.
+
+**Execution — standard variant:**
+- Run 1 failed: `CODE_SIGN_IDENTITY[sdk=macosx*]=…` is not valid on the xcodebuild command line (parsed as identity `macosx*]=Developer ID Application`). Removed; the unconditional override outranks the target-level conditional anyway.
+- Run 2 built clean (Developer ID + hardened runtime on all targets) but the new gate rejected `Sparkle.framework/Versions/B/Autoupdate`: Sparkle 2.5.2's SPM XCFramework ships `Autoupdate`, `Updater.app`, `Installer.xpc`, `Downloader.xpc` **ad-hoc signed**, and Xcode's Code Sign On Copy re-signs only the outer framework. Added `resign_sparkle()` (inside-out re-sign with `--preserve-metadata=entitlements`, then re-seal framework and app) — the procedure Sparkle documents. Gate widened from app+helper to every Mach-O in the bundle.
+- Runtime smoke test on the hardened build: alive, 31 system plugins mapped (62 files), 7 frameworks, zero AMFI/library-validation events. Entitlements confirmed embedded.
+- Run 3 (`--skip-build --notarize`): 47/47 Mach-Os pass; notarization **Accepted** (submission `21a48304-44cc-497c-9b31-91299020f48e`); stapled; `spctl` → `source=Notarized Developer ID`. Output `./release/`: OpenEmu.app 2.5.0 (7423), 19 cores (re-signed, previously ad-hoc), 7 frameworks.
+- Side fix: `~/Library/Logs/Notary/` did not exist, so `ntmy` could not write its log (`ntmy --log` depends on it). Created.
+
+**Execution — metal variant (`--metal --notarize`):**
+- Scheme `OpenEmu + Stella` built clean; Stella built and installed to App Support during the run (binary mtime 20:25), signed Developer ID + runtime by the same overrides. SNES9x is not reachable through the metal workspace (no shared scheme; its project has no OpenEmu-SDK reference for a standalone build), so it is taken from App Support and re-signed.
+- 47/47 Mach-Os pass; notarization **Accepted** (submission `e35c39dd-24b3-44be-a6ca-89d95c9abac1`); stapled; `spctl` → `source=Notarized Developer ID`. Smoke test: alive, 31 system plugins mapped.
+- Output `./release-metal/`: OpenEmu.app 2.5.0 (7423), cores Stella + SNES9x, 7 frameworks.
+
+**Not verified:** launching a game (core dlopen + JIT inside the helper under hardened runtime). Entitlements are in place and no library-validation denials occurred at app level; a manual game launch from each release is the remaining acceptance step.
+
+**Commit:** single commit (build 7423 = `git rev-list --count HEAD` 7422 + 1): version bump, entitlements + pbxproj wiring, rewritten `bin/release-build.sh`, ADR 0001, README note, `.gitignore` + untracking of 2,984 release binaries, and the Icon Composer `OpenEmu.icon` with its pbxproj references (already on disk, uncommitted). `.claude/settings.json` left uncommitted (local).
+
+✅ **Step 9 complete — both variants at 2.5.0 (7423), Developer ID signed, hardened runtime, notarized, stapled.**
+
