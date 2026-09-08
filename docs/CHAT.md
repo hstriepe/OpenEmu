@@ -241,3 +241,69 @@ Committed as `e9765916e` and pushed to `fork/master`; `git rev-list --count HEAD
 
 ✅ **Step 12 complete — `release/` and `release-metal/` at 2.5.0 (7426): donation item removed, About shows `v2.5.0 (7426)`, both notarized (apps stapled, cores verified online).** Staged for one commit (rev-list 7425 → 7426): `AppDelegate.swift`, `AboutViewController.swift`, `Main.storyboard`, `OpenEmu-Info.plist`, `docs/CHAT.md`. The About git stamp will read the 7426 commit only after a rebuild following the commit.
 
+User confirmed the About box on the Mac. Committed as `b7f74b12a` and pushed to `fork/master`; `git rev-list --count HEAD` = 7426.
+
+### Step 13: Rebuild changed items from the committed 7426
+
+**Prompt:** "Commit, and push. Do a release build of all items that have changed."
+
+**What changed:** the app (both variants). Standard cores are unchanged and already ticketed, so the standard run notarizes the app only (`--notarize`); the re-signed core copies keep their cdhash, so existing tickets still apply. The metal scheme rebuilds Stella (new binary → new cdhash), so the metal run uses `--notarize --notarize-cores`. Rebuilding after the commit makes `OEBuildVersion` read `7398.28-gb7f74b12a`.
+
+**Convention going forward:** commit → release build, so the About stamp names the release commit and `CFBundleVersion` equals the commit count.
+
+**Result — standard:** clean build from `b7f74b12a`; 47/47; app notarized **Accepted** (`d9fc8076-fbd7-43fa-9400-39e9b90073d7`), stapled, Gatekeeper OK. `OEBuildVersion 7398.28-gb7f74b12a-Release`, `CFBundleVersion` 7426. Cores were re-signed (fresh timestamp, same cdhash) without resubmission and all 19 still report `source=Notarized Developer ID` — confirms tickets are keyed by cdhash, so unchanged cores never need re-notarizing.
+
+**Result — metal:** clean build from `b7f74b12a`; 47/47; app notarized **Accepted** (`b8eab976-d111-4063-827e-4a342ec126f2`), stapled; Stella and SNES9x Accepted. `OEBuildVersion 7398.28-gb7f74b12a-Release`, 7426.
+
+✅ **Step 13 complete — both variants rebuilt from the committed 7426; About stamp names the release commit.**
+
+**Workspace comparison (user question):** the two workspaces share the same `OpenEmu.xcodeproj`, build settings, SPM pins, and workspace settings — the app is identical. They differ only in referenced projects (standard: SDK/Kit/Shaders + 27 core projects; metal: SDK/Kit/Shaders + Stella, SNES9x) and workspace-level schemes (`OpenEmu + Cores`, `OpenEmu + Cores (Experimental, Alpha)` vs `OpenEmu + Stella`). "metal" is a historical name; there are no Metal-specific settings.
+
+**Experimental cores (user question):** upstream's notion of "experimental" is the `OpenEmu + Cores (Experimental, Alpha)` scheme in the standard workspace: the 19 stable cores plus 4DO, MAME, Potator, VirtualJaguar, blueMSX, PokeMini, plus the aggregate target "Build & Copy Experimental & Alpha SystemPlugins", which copies the extra system plugins into the app and points the built app's `OECoreListURL`/`SUFeedURL` at upstream's `oecores-experimental.xml`/`appcast-experimental.xml`. The original `release-build.sh` `--experimental` option named exactly this scheme (only its workspace path was wrong); the `--metal` variant I substituted builds Stella/SNES9x instead and is not what upstream calls experimental. Decision on which second variant to ship left to the user.
+
+### Step 14: Drop the metal workspace; add an all-cores scheme; `--rebuild-cores`
+
+**Prompt:** "Drop the OpenEmu-metal workspace. Merge the core and rebuild feature into OpenEmu. Add a scheme that rebuilds all cores."
+
+**Findings:** `OpenEmu-metal.xcworkspace` (7 tracked files) built the same app as the standard workspace; its only distinct effect was rebuilding Stella from source. Of the 26 core projects referenced by `OpenEmu.xcworkspace`, 23 exist and have a "Build & Install" aggregate target; DeSmuME has a plug-in target but no install target; **`UME/MAME.xcodeproj` and `PPSSPP/PPSSPP.xcodeproj` do not exist in this checkout and are not in `.gitmodules`** — stale references left in the workspace and in upstream's `OpenEmu + Cores (Experimental, Alpha)` scheme (the PPSSPP core in App Support is prebuilt, not from this tree).
+
+**Plan:**
+- `git rm -r OpenEmu-metal.xcworkspace`; delete `release-metal/`; drop `!OpenEmu-metal.xcworkspace` and `/release-metal/` from `.gitignore`; remove the workspace row from CLAUDE.md.
+- New workspace scheme `Build & Install All Cores.xcscheme`: the 23 buildable install targets (references taken from the Experimental scheme; MAME and PPSSPP omitted because their projects are absent), cores only, `buildImplicitDependencies = YES` so the SDK frameworks build as needed.
+- `bin/release-build.sh`: remove `--metal`/variants; add `--rebuild-cores`, which builds that scheme with the release signing overrides (incremental, own log) before organizing and implies core notarization when `--notarize` is given; cores are always collected from App Support. CLAUDE.md Build section and README list the schemes.
+
+**Result:** workspace removed (7 files), `release-metal/` deleted (rename-aside; Finder had it open), no `metal` references left in `.gitignore`, CLAUDE.md, README, ADR, or the script. The new scheme is listed by `xcodebuild -list`, and `-showBuildSettings` resolves its full build graph: 23 targets, all install aggregates (4DO, Atari800, BSNES, Bliss, CrabEmu, FCEU, Gambatte, GenesisPlus, JollyCV, Mednafen, Mupen64Plus, Nestopia, O2EM, Picodrive, PokeMini, Potator, ProSystem, SNES9x, Stella, VecXGL, VirtualJaguar, blueMSX, mGBA), zero errors. (`xcodebuild -dry-run` is no longer supported, so no cheaper end-to-end check exists short of building.) Script: `bash -n` clean; `--rebuild-cores` wired into `main`, summary, and help.
+
+**Not run:** the actual all-cores build. It would take a long time (Mednafen, Mupen64Plus, DeSmuME-class cores) and, because every install target writes to App Support, the next `release/` would ship 24 cores — the 19 current ones plus 4DO, blueMSX, PokeMini, Potator, VirtualJaguar — a change in release composition left for the user to decide.
+
+**Open:** `OpenEmu.xcworkspace` and upstream's `OpenEmu + Cores (Experimental, Alpha)` scheme still reference `UME/MAME.xcodeproj` and `PPSSPP/PPSSPP.xcodeproj`, which are absent from the checkout and from `.gitmodules`.
+
+✅ **Step 14 complete — single workspace, `Build & Install All Cores` scheme, `--rebuild-cores` in the release script.** Staged: metal workspace deletions, scheme, `.gitignore`, CLAUDE.md, README, CHAT.md.
+
+### Step 15: Hollow cores in the release (found while answering "are MAME and PPSSPP in the current build scheme?")
+
+**Scheme status:** MAME is referenced only by `OpenEmu + Cores (Experimental, Alpha)` and disabled there; PPSSPP is referenced by `OpenEmu + Cores` and the Experimental scheme. Neither project exists in the checkout, so neither can be built by any scheme; `OpenEmu` and the new `Build & Install All Cores` reference neither.
+
+**Defect:** `~/Library/Application Support/OpenEmu/Cores` contains three bundles with **no executable** — `Atari800`, `Mednafen`, `PPSSPP` (`Contents/MacOS` empty; Info.plist + Resources only). Every release run so far (7423–7426) copied them into `release/cores`, re-signed them, and notarized them; `codesign --verify --deep --strict` and the notary service both accept an executable-less bundle, so the gate never caught it. At runtime OpenEmu cannot load them, which silently breaks every system those cores serve (Atari 5200/8-bit; Mednafen's PC Engine, PC-FX, Virtual Boy, WonderSwan, Lynx, Neo Geo Pocket, Saturn, PlayStation, Sega CD; PSP). The other 16 cores are intact universal binaries. Root cause of the hollow bundles not yet established (all App Support cores share the 15:22 timestamp).
+
+**Fix in the script:** `organize_release` now requires `Contents/MacOS/<CFBundleExecutable>` to be a Mach-O for every core and aborts listing the hollow ones — and does so *before* the previous `release/` is removed, so a failure leaves it intact. Verified: `--skip-build` now stops with "Cores without an executable … Atari800 Mednafen PPSSPP" and `release/` still holds 19 cores. Why the old gate passed: codesign treats an executable-less bundle as a resource bundle (`Executable=…/Contents/Info.plist`, `Format=bundle`), so `--verify --deep --strict` succeeds and the notary service, finding no code, accepts.
+
+**Three-way comparison (user request: "compare deltas with older build outputs in /Volumes/Shared/OpenEmu/CoresX"):** `CoresX` (37 bundles incl. dSYMs; identical to `~/Library/Application Support/OpenEmu/CoresX`) holds the Sep 5 outputs; current `Cores` holds Sep 7; `OpenEmu-std` holds the Mar 1 distro set (+ experimental 4DO, blueMSX, PokeMini, Potator, VirtualJaguar, MAME 0.250 x86_64-only 2022, DolphinGameCore arm64 2026-09-03).
+- 16 cores: same versions in all three; only build dates differ.
+- **Mednafen 1.32.0 — hollow in Cores *and* CoresX**: has never produced a binary from this tree. Distro has 1.26.1 (universal, working).
+- **PPSSPP 1.14.4 — hollow in both**; no project in the tree. Distro has 1.14.4 universal (2023-06-22) → **restored into App Support from the distro** (only working source).
+- **Atari800 3.1.1 — hollow in Cores; CoresX has a 2015 x86_64-only build** (useless on arm64). Distro has 3.1.1 universal. Project exists in the tree → diagnosing why it does not build before deciding between rebuilding and copying.
+- CoresX extras: DeSmuME 0.9.11.3 and dolphin 5.0.4, both x86_64-only (2019/2020) — not shippable for arm64.
+
+**Atari800 diagnostic:** `xcodebuild -project Atari800/Atari800.xcodeproj -target "Build & Install Atari800" -configuration Release` with `SYMROOT`/`OBJROOT` pointed at the workspace's DerivedData (so the SDK frameworks resolve) — **BUILD SUCCEEDED**, universal 813 KB binary, and the install phase replaced the hollow bundle in App Support. The hollow state was a stale artifact, not a persistent build failure. Mednafen diagnostic started the same way.
+
+**Mednafen diagnostic:** **BUILD SUCCEEDED** — universal 29.6 MB binary installed into App Support. Its version is **1.26.1** (the tree's submodule), not the 1.32.0 the hollow bundle declared; that 1.32.0 skeleton never had a binary here. All 19 App Support cores now carry executables. Release regenerated with `--skip-build --notarize --notarize-cores` so the three repaired cores (Atari800 3.1.1, Mednafen 1.26.1, PPSSPP 1.14.4 from the distro) ship with tickets.
+
+**Result:** `release/` — OpenEmu.app 2.5.0 (7426), still stapled (submission skipped); **19/19 cores with a Mach-O executable and `source=Notarized Developer ID`**; the three repaired cores are universal and signed with team D6WY385Q4D. App Support now also holds `.dSYM` bundles for Atari800, Mednafen, Stella (install-target side effect; the release glob ignores them). The earlier 7423–7426 `release/` outputs shipped the three hollow cores; this regeneration supersedes them.
+
+**Open:** the tree's Mednafen is 1.26.1 while a 1.32.0 skeleton existed — if 1.32.0 is wanted, the submodule needs updating and building.
+
+**Root cause of the "Sparkle re-signed again" recurrences (Steps 13–15) and very likely the "Nestopia ticket propagation delay" (Step 13):** the script runs under `set -o pipefail`, and several checks were written as `cmd 2>&1 | grep -q pattern`. `grep -q` exits on the first match; if the producer (`codesign -dvv`, `spctl`, `file`) is still writing, it dies of SIGPIPE, the pipeline's status is non-zero, and the check reports a false negative at random. Fixed by reading to EOF (`grep pattern >/dev/null`) in the four piped checks; the here-string checks (`<<<"$info"`) were never affected. The re-seals were benign — a re-sign with the same identity reproduces the same CodeDirectory, so the notarized cdhash (`d38f48f9…`) and stapled ticket stayed valid; a probe that briefly reported the staple invalid had passed `OpenEmu.app/Contents` instead of the app to `stapler`.
+
+✅ **Step 15 complete — hollow cores found, gated, and repaired; release regenerated; pipefail/grep race fixed.**
+

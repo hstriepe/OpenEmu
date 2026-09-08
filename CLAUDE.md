@@ -22,8 +22,7 @@ For full product documentation, see [README.md](README.md).
 | Path | Role |
 |------|------|
 | `OpenEmu/` | Main app target (Swift + Objective-C) |
-| `OpenEmu.xcworkspace` | Xcode workspace (primary) |
-| `OpenEmu-metal.xcworkspace` | Alternative Metal-focused workspace |
+| `OpenEmu.xcworkspace` | Xcode workspace (app, SDK, and all core projects) |
 | `[EmulatorName]/` | Plugin targets (Stella, Mupen64Plus, BSNES, etc.) |
 | `docs/PROMPT.md` | Human prompts (input only) |
 | `docs/CHAT.md` | Plans, actions, results, and debug log (`## LOG`) |
@@ -56,9 +55,15 @@ open OpenEmu.xcworkspace
 
 # Or via command line
 xcodebuild -workspace OpenEmu.xcworkspace -scheme OpenEmu -configuration Release clean build
+
+# Rebuild every core from source into ~/Library/Application Support/OpenEmu/Cores
+xcodebuild -workspace OpenEmu.xcworkspace -scheme "Build & Install All Cores" -configuration Release build
 ```
 
-Xcode is authoritative. Target and scheme metadata lives in the workspace.
+Xcode is authoritative. Target and scheme metadata lives in the workspace. Workspace schemes:
+`OpenEmu` (app only), `OpenEmu + Cores` (app + stable cores), `OpenEmu + Cores (Experimental, Alpha)`
+(app + all cores + experimental system plugins and feeds), `Build & Install All Cores` (cores only;
+MAME is listed but disabled).
 
 ---
 

@@ -12,7 +12,6 @@ build/
 !default.perspectivev3
 *.xcworkspace
 !OpenEmu.xcworkspace
-!OpenEmu-metal.xcworkspace
 !default.xcworkspace
 xcuserdata/
 *.xccheckout
@@ -26,5 +25,4 @@ CodeSign.xcconfig
 
 # Release build output and local release tooling (not tracked)
 /release/
-/release-metal/
 /bin/
