@@ -22,8 +22,9 @@ would crash.
 
 ## Decision
 
-1. **Distribution signing is applied as `xcodebuild` overrides** in
-   `bin/release-build.sh`, not in the project: `CODE_SIGN_STYLE=Manual`,
+1. **Distribution signing is applied as `xcodebuild` overrides** by the release
+   script (`bin/release-build.sh`, kept locally — `bin/` is not tracked), not in
+   the project: `CODE_SIGN_STYLE=Manual`,
    `CODE_SIGN_IDENTITY="Developer ID Application"`, `DEVELOPMENT_TEAM`,
    `ENABLE_HARDENED_RUNTIME=YES`, `OTHER_CODE_SIGN_FLAGS=--timestamp`,
    `CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO`. Command-line settings outrank every
@@ -64,6 +65,11 @@ would crash.
   upstream OpenEmu, which must load third-party cores.
 - `ntmy --submit` exits 0 even when stapling fails, so the script validates the
   stapled ticket and asks Gatekeeper (`spctl`) explicitly.
+- Plugin bundles cannot be stapled (`stapler`: "incapable of working with OpenEmu
+  Core Plugin files"). Notarized cores are therefore validated by Gatekeeper
+  online — `spctl -a -t open --context context:primary-signature` reports
+  `source=Notarized Developer ID`. `--notarize-cores` submits every core with
+  `--no-wait` and then waits, so Apple processes them concurrently.
 - Sparkle's `SUFeedURL`/`SUPublicEDKey` still point at upstream OpenEmu; Sparkle 2
   rejects updates signed by a different team, so auto-update is effectively inert
   for this fork until a feed for this Team ID exists.

@@ -174,3 +174,17 @@
 
 ✅ **Step 9 complete — both variants at 2.5.0 (7423), Developer ID signed, hardened runtime, notarized, stapled.**
 
+**Amendment:** `bin/` is local tooling and must not be committed (user). `bin/release-build.sh` had been swept in by the same `git add -A` that committed the release binaries. Untracked it (kept on disk), added `/bin/` to `.gitignore`, removed the script path from README; ADR 0001 notes the script is local.
+
+**Cores and stapling:** `--notarize-cores` aborted after the first core with "Core notarization failed" — a misdiagnosis. Apple *accepted* Atari800 (`57a133bb-41ca-410e-aa7c-f91420bbc217`); what fails is `stapler` ("incapable of working with OpenEmu Core Plugin files" — plugin bundles cannot carry a stapled ticket). Gatekeeper validates the ticket online: `spctl -a -t open --context context:primary-signature` → `source=Notarized Developer ID`. Script fixed: cores are notarized as a phase after organizing (submit all `--no-wait`, then `wait` each), verified with `spctl`, never stapled; app notarization is idempotent (skips when already stapled — the aborted run had re-submitted the app, `3921955e-…`). The abort had left `release/cores` with only Atari800; re-running restores all 19.
+
+**Finder race:** the metal re-run died at `rm -rf release-metal` with "Directory not empty" — Finder re-creates `.DS_Store` in a folder that is open while it is being deleted (only `.DS_Store` remained). Script now renames the release directory aside before removing it, so Finder's handle follows the old inode.
+
+**Result — standard cores:** `--skip-build --notarize-cores` restored `release/` (19 cores) and notarized all 19 in one parallel batch (submitted 20:41:30–20:41:51, all **Accepted** by 20:42:09; ids in the run log, e.g. Mupen64Plus `d9b71c00-4389-4041-8a95-d4271bedd5b0`). App submission skipped (already stapled). `spctl` confirms `source=Notarized Developer ID` for every core.
+
+**Result — metal cores:** `--metal --skip-build --notarize-cores` (with the rename-aside fix) rebuilt `release-metal/` and notarized Stella (`31d9bf51-fe80-4411-9412-d7617312d53b`) and SNES9x (`43ca51a3-cd43-4468-ae82-d31c3924e060`) — both **Accepted**, `spctl` → `source=Notarized Developer ID`. App skipped (stapled). No stale directory left behind.
+
+**Unexplained observation:** at 20:41 the standard app's Sparkle nested code was no longer signed by our team, although the 20:22 run and the 20:33 run had both re-signed it, and `OEBuildVersion` (`7398.24-g1933dc193`) proves no rebuild occurred in between. The re-sign is harmless — the app's cdhash is unchanged, so the stapled ticket stayed valid (`stapler validate` passed after the re-seal) — and the idempotence check worked on the metal app in the same minute. Recorded, not chased.
+
+✅ **Cores notarized for both variants.** Final: `release/` — app + 19 cores; `release-metal/` — app + Stella, SNES9x; all 2.5.0 (7423), Developer ID, hardened runtime, notarized (apps stapled; plugin bundles verified online by Gatekeeper).
+
