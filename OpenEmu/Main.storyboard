@@ -175,7 +175,7 @@
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="localizeTitle" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                             <connections>
-                                                <action selector="checkForUpdates:" target="1179" id="1180"/>
+                                                <action selector="checkForUpdates:" target="805" id="1180"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Send a Donation…" id="oKt-cF-ZgP">
@@ -923,12 +923,12 @@ DQ
                 <customObject id="-1" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <customObject id="805" userLabel="OEApplicationDelegate" customClass="OEApplicationDelegate">
                     <connections>
+                        <outlet property="checkForUpdatesMenuItem" destination="1016" id="chk-Fo-Upd"/>
                         <outlet property="fileMenu" destination="980" id="1224"/>
                         <outlet property="helpMenu" destination="0ql-Da-Qro" id="trh-qr-398"/>
                     </connections>
                 </customObject>
                 <userDefaultsController id="1212"/>
-                <customObject id="1179" userLabel="Sparkle" customClass="SPUStandardUpdaterController"/>
             </objects>
             <point key="canvasLocation" x="75" y="0.0"/>
         </scene>

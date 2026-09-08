@@ -27,6 +27,7 @@
 import Cocoa
 import OpenEmuSystem
 import OpenEmuKit
+import Sparkle
 
 private var appearancePrefChangedKVOContext = 0
 
@@ -46,7 +47,12 @@ class AppDelegate: NSObject {
     
     @IBOutlet weak var fileMenu: NSMenu!
     @IBOutlet weak var helpMenu: NSMenu!
-    
+    @IBOutlet weak var checkForUpdatesMenuItem: NSMenuItem!
+
+    // Created in code, not the storyboard: a nib-instantiated controller starts Sparkle
+    // unconditionally, and Sparkle aborts the app if the updater cannot start.
+    private var updaterController: SPUStandardUpdaterController?
+
     lazy var mainWindowController = MainWindowController(windowNibName: "MainWindow")
     
     lazy var preferencesWindowController = PreferencesWindowController(windowNibName: "Preferences")
@@ -736,8 +742,37 @@ extension AppDelegate: NSMenuDelegate {
 
 // MARK: - OpenEmuApplicationDelegateProtocol
 
+// MARK: - Sparkle app updates
+
+extension AppDelegate: NSMenuItemValidation {
+
+    /// Master switch: `OESparkleUpdatesEnabled` in Info.plist. Absent means enabled.
+    private var sparkleUpdatesEnabled: Bool {
+        Bundle.main.object(forInfoDictionaryKey: "OESparkleUpdatesEnabled") as? Bool ?? true
+    }
+
+    fileprivate func setUpSparkle() {
+        guard sparkleUpdatesEnabled else {
+            checkForUpdatesMenuItem?.isHidden = true
+            return
+        }
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    }
+
+    @IBAction func checkForUpdates(_ sender: Any?) {
+        updaterController?.checkForUpdates(sender)
+    }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(checkForUpdates(_:)) {
+            return updaterController?.updater.canCheckForUpdates ?? false
+        }
+        return true
+    }
+}
+
 @objc extension AppDelegate: OpenEmuApplicationDelegateProtocol {
-    
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         atexit {
             // Always remove the XPC broker registered with launchd.
@@ -770,7 +805,9 @@ extension AppDelegate: NSMenuDelegate {
         notificationCenter.removeObserver(self, name: NSApplication.didFinishRestoringWindowsNotification, object: nil)
     }
     func applicationDidFinishLaunching(_ notification: Notification) {
-        
+
+        setUpSparkle()
+
         // Get the “Customize Touch Bar…” menu to display in the View menu.
         NSApp.isAutomaticCustomizeTouchBarMenuItemEnabled = true
         

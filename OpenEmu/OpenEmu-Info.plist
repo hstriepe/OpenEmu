@@ -120,7 +120,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>2.5.0</string>
 	<key>CFBundleVersion</key>
-	<string>7423</string>
+	<string>7425</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
 	<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>
@@ -135,7 +135,7 @@
 		<true/>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2009–2023 OpenEmu Team. All rights reserved.</string>
+	<string>Copyright © 2009–2026 OpenEmu Team. All rights reserved.</string>
 	<key>NSMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSPrincipalClass</key>
@@ -150,6 +150,10 @@
 	<string>https://raw.github.com/OpenEmu/OpenEmu-Update/master/oecores.xml</string>
 	<key>OELongBuildVersion</key>
 	<string></string>
+	<!-- Master switch for Sparkle app updates (menu item + automatic checks).
+	     Set to true to re-enable; the SU* keys below are left as upstream. -->
+	<key>OESparkleUpdatesEnabled</key>
+	<false/>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedURL</key>

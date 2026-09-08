@@ -6,6 +6,9 @@ OpenEmu
 - Universal compiles and builds updates.
 - Release builds are Developer ID signed with hardened runtime and notarized;
   see `docs/decisions/0001-developer-id-hardened-runtime.md`.
+- Sparkle app updates are switched off (`OESparkleUpdatesEnabled` = false in
+  `OpenEmu/OpenEmu-Info.plist`), since the upstream feed does not apply to this
+  fork; set it to true to bring back "Check for Updates…" and automatic checks.
 
 
 

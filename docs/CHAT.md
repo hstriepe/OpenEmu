@@ -188,3 +188,23 @@
 
 ✅ **Cores notarized for both variants.** Final: `release/` — app + 19 cores; `release-metal/` — app + Stella, SNES9x; all 2.5.0 (7423), Developer ID, hardened runtime, notarized (apps stapled; plugin bundles verified online by Gatekeeper).
 
+### Step 10: Build 7425 — disable Sparkle updates, copyright 2026, full notarized builds
+
+**Prompt:** Disable Sparkle update (does not apply to this fork), copyright → 2026, build 7425, full build + notarization of both versions.
+
+**Findings:** Sparkle plays two roles. (1) App auto-update: `Main.storyboard` instantiates an `SPUStandardUpdaterController` (object `1179`, starts Sparkle at launch) and the "Check for Updates…" menu item (`1016`) targets it; `Info.plist` has `SUEnableAutomaticChecks=true` and `SUFeedURL` pointing at upstream OpenEmu's appcast — Sparkle 2 would reject upstream updates (different Team ID) anyway. (2) `SUStandardVersionComparator`, used by `CoreUpdater` and `OEVersionMigrationController` for version comparison — unrelated to updating, so the framework stays linked and embedded. Only `OpenEmu-Info.plist` carries a copyright string.
+
+**Plan (revised on user direction — "make it so it can be easily turned back on"):**
+- First attempt deleted the storyboard updater object and menu item outright; reverted (`git checkout -- Main.storyboard`).
+- Single switch: new `Info.plist` key `OESparkleUpdatesEnabled` (false). `AppDelegate` creates the `SPUStandardUpdaterController` in code only when the key is true and hides the "Check for Updates…" menu item otherwise; the menu item's action is retargeted from the storyboard Sparkle object to the App Delegate, which forwards to the controller. The storyboard's auto-starting controller object is removed because a nib-instantiated `SPUStandardUpdaterController` starts unconditionally in `awakeFromNib`, and Sparkle 2 aborts the app when the updater cannot start. All `SU*` keys stay exactly as upstream, so re-enabling is flipping one boolean.
+- `Info.plist`: add `OESparkleUpdatesEnabled=false`; copyright `2009–2023` → `2009–2026`; `CFBundleVersion` 7423 → 7425 (= current rev-list count 7424 + 1 commit).
+- Full builds with notarization of app and cores: `bin/release-build.sh --notarize --notarize-cores`, then `--metal --notarize --notarize-cores` (sequential — the metal scheme installs Stella into App Support, which the standard organize step reads).
+
+**Implementation:** `AppDelegate` gains `import Sparkle`, an `@IBOutlet checkForUpdatesMenuItem`, a `private var updaterController: SPUStandardUpdaterController?`, and an `NSMenuItemValidation` extension with `setUpSparkle()` (called first in `applicationDidFinishLaunching`), `checkForUpdates(_:)` forwarding to the controller, and `validateMenuItem` using `updater.canCheckForUpdates`. `Main.storyboard`: menu item action retargeted `1179` → `805` (App Delegate), outlet `checkForUpdatesMenuItem` → `1016` added, `SPUStandardUpdaterController` object removed. `Info.plist`: `OESparkleUpdatesEnabled=false` with a comment; `SUEnableAutomaticChecks`/`SUFeedURL` restored to upstream values. Re-enable = set the key to `true` (or delete it).
+
+**Result — standard 7425:** clean build; 47/47 Mach-Os pass; app notarized **Accepted** (`8a31bbde-7cfb-4ae9-b224-ed927cdf6fa2`), stapled, Gatekeeper OK; all 19 cores Accepted. Built plist: 2.5.0 (7425), copyright 2009–2026, `OESparkleUpdatesEnabled=false`, `OEBuildVersion 7398.26-gbe18b2930`. Runtime: alive, 31 system plugins mapped; the OpenEmu menu (read via Accessibility) shows About → Send a Donation… → Settings… — no "Check for Updates…"; zero Sparkle log activity. By executable path, the only process from the bundle is `OpenEmu` itself — no Sparkle Autoupdate/Updater/XPC children. (Earlier `pgrep -f` counts were self-matches on the shell's own command line.)
+
+**Result — metal 7425:** clean build; 47/47 pass; app notarized **Accepted** (`784110f8-c323-44cb-bcdf-e482756bcc65`), stapled, Gatekeeper OK; Stella and SNES9x Accepted. Built plist 7425 / 2009–2026 / switch off; runtime: alive, 31 system plugins, menu without "Check for Updates…", no Sparkle processes.
+
+✅ **Step 10 complete — both variants at 2.5.0 (7425), Sparkle updates off behind `OESparkleUpdatesEnabled`, notarized app + cores.** Staged for commit (one commit → rev-list 7425): `AppDelegate.swift`, `Main.storyboard`, `OpenEmu-Info.plist`, `README.md`, `docs/CHAT.md`.
+
