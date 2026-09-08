@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/Shared/repo/github/OpenEmuKit/Source/**)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp"
+    ]
+  }
+}

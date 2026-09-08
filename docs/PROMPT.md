@@ -30,3 +30,8 @@ Just to be clear, the plugins are fine. COuld it be the newer version of Swift c
 3. Updated `AppDelegate.loadPlugins()` to skip plugins without valid controllers
 
 This allows the app to gracefully handle bundled plugins that can't load their controllers while still processing plugins from Application Support correctly.
+
+Do a release build and export to ./release
+
+Added OpenEmuKit to the forks.
+ 
