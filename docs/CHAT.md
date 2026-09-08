@@ -112,3 +112,21 @@
 
 **Final Status:** All issues resolved, ready to ship
 
+### Step 8: OpenEmu-metal Release (Experimental Cores)
+- Built using OpenEmu-metal.xcworkspace (curated project set)
+- Includes 2 experimental cores for Metal rendering:
+  * Stella.oecoreplugin
+  * SNES9x.oecoreplugin
+- Exported to ./release-metal/:
+  * OpenEmu.app (Metal-optimized)
+  * 7 frameworks
+  * 2 experimental cores
+- **Verified:** Metal release runs successfully
+
+✅ **ALL RELEASES COMPLETE**
+- ./release/ — Standard release with 19 cores
+- ./release-metal/ — Metal release with 2 experimental cores
+- Both signed with hstriepe@mac.com (Team D6WY385Q4D)
+- Both include Swift 6 compatibility fixes
+- Ready for distribution
+
