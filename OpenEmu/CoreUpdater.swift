@@ -33,8 +33,29 @@ final class CoreUpdater: NSObject {
         case noDownloadableCoreForIdentifierError
         case newCoreCheckAlreadyPendingError
     }
-    
+
     static let shared = CoreUpdater()
+
+    // The cores on openemu.org are Intel-only. Under Rosetta the x86_64 slice runs and can
+    // load them, so this is a property of the executing slice, decided at compile time.
+    static var coreDownloadsBlocked: Bool {
+        #if arch(arm64)
+        return true
+        #else
+        return false
+        #endif
+    }
+
+    /// Explains why nothing was downloaded. Returns a user-cancelled error so callers stay quiet.
+    @discardableResult
+    func presentCoreDownloadsBlockedAlert() -> Error {
+        let alert = OEAlert()
+        alert.messageText = NSLocalizedString("Core Downloads Unavailable", comment: "")
+        alert.informativeText = NSLocalizedString("The cores offered for download are built for Intel Macs and cannot be loaded by this Apple silicon version of OpenEmu.\n\nInstall Apple silicon builds of the cores you need into ~/Library/Application Support/OpenEmu/Cores.", comment: "")
+        alert.defaultButtonTitle = NSLocalizedString("OK", comment: "")
+        alert.runModal()
+        return NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError)
+    }
     
     @objc dynamic private(set) var coreList: [CoreDownload] = []
     
@@ -73,7 +94,12 @@ final class CoreUpdater: NSObject {
             performSelector(onMainThread: #selector(checkForUpdates), with: nil, waitUntilDone: false)
             return
         }
-        
+
+        if Self.coreDownloadsBlocked {
+            Logger.download.info("Core downloads are blocked on this architecture; skipping core update check.")
+            return
+        }
+
         for plugin in OECorePlugin.allPlugins {
             if let appcastURLString = plugin.infoDictionary["SUFeedURL"] as? String,
                let feedURL = URL(string: appcastURLString) {
@@ -138,11 +164,22 @@ final class CoreUpdater: NSObject {
             }
             return
         }
+        if Self.coreDownloadsBlocked {
+            Logger.download.info("Core downloads are blocked on this architecture; skipping automatic core updates.")
+            return
+        }
         autoInstall = true
         checkForUpdates()
     }
     
     func checkForNewCores(completionHandler handler: ((_ error: Error?) -> Void)? = nil) {
+        if Self.coreDownloadsBlocked {
+            // Complete without error so the Setup Assistant and Preferences carry on with the
+            // installed cores only; nothing Intel-only is ever offered.
+            Logger.download.info("Core downloads are blocked on this architecture; not fetching the core list.")
+            DispatchQueue.main.async { handler?(nil) }
+            return
+        }
         guard lastCoreListURLTask == nil else {
             handler?(Errors.newCoreCheckAlreadyPendingError)
             return
@@ -241,7 +278,11 @@ final class CoreUpdater: NSObject {
     // MARK: - Installing with OEAlert
     
     func installCore(for game: OEDBGame, withCompletionHandler handler: @escaping (_ plugin: OECorePlugin?, _ error: Error?) -> Void) {
-        
+        if Self.coreDownloadsBlocked {
+            handler(nil, presentCoreDownloadsBlockedAlert())
+            return
+        }
+
         let systemIdentifier = game.system?.systemIdentifier ?? ""
         var validPlugins = coreList.filter { $0.systemIdentifiers.contains(systemIdentifier) }
         
@@ -281,7 +322,11 @@ final class CoreUpdater: NSObject {
     }
     
     func installCore(for state: OEDBSaveState, withCompletionHandler handler: @escaping (_ plugin: OECorePlugin?, _ error: Error?) -> Void) {
-        
+        if Self.coreDownloadsBlocked {
+            handler(nil, presentCoreDownloadsBlockedAlert())
+            return
+        }
+
         let coreID = state.coreIdentifier.lowercased()
         if let download = coresDict[coreID] {
             let coreName = download.name
@@ -319,9 +364,13 @@ final class CoreUpdater: NSObject {
     }
     
     func installCore(with download: CoreDownload, completionHandler handler: @escaping (_ plugin: OECorePlugin?, _ error: Error?) -> Void) {
-        
+        if Self.coreDownloadsBlocked {
+            handler(nil, presentCoreDownloadsBlockedAlert())
+            return
+        }
+
         let alert = OEAlert()
-        
+
         coreIdentifier = coresDict.first(where: { $1 == download })?.key
         completionHandler = handler
         self.alert = alert
@@ -398,6 +447,10 @@ final class CoreUpdater: NSObject {
     // MARK: - Other user-initiated (= with error reporting) downloads
     
     func installCoreInBackgroundUserInitiated(_ download: CoreDownload) {
+        if Self.coreDownloadsBlocked {
+            presentCoreDownloadsBlockedAlert()
+            return
+        }
         assert(download.delegate === self, "download \(download)'s delegate is not the singleton CoreUpdater!?")
         
         pendingUserInitiatedDownloads.insert(download)

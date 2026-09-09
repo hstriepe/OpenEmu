@@ -6,8 +6,16 @@ OpenEmu
 - Universal compiles and builds updates.
 - Release builds are Developer ID signed with hardened runtime and notarized;
   see `docs/decisions/0001-developer-id-hardened-runtime.md`.
+- Release builds bundle the cores inside `OpenEmu.app/Contents/PlugIns/Cores`,
+  so nothing needs downloading or installing; a core placed in
+  `~/Library/Application Support/OpenEmu/Cores` overrides the bundled copy.
+  Shipped cores are versioned `<emulator version, last component +1>.<OpenEmu build>`
+  (e.g. Nestopia `1.53.7428`). See `docs/decisions/0003-bundle-cores-in-the-app.md`.
 - The `Build & Install All Cores` scheme rebuilds every core from source into
   `~/Library/Application Support/OpenEmu/Cores` (MAME is listed but disabled).
+- On Apple silicon, downloading cores from openemu.org is blocked with an
+  explanation: those cores are Intel-only and cannot load in the native arm64 app
+  (under Rosetta they still work). See `docs/decisions/0002-block-intel-core-downloads-on-arm64.md`.
 - Sparkle app updates are switched off (`OESparkleUpdatesEnabled` = false in
   `OpenEmu/OpenEmu-Info.plist`), since the upstream feed does not apply to this
   fork; set it to true to bring back "Check for Updates…" and automatic checks.
